@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Volunteer Signup</title>
+</head>
+<body>
+  <h2>Volunteer Signup</h2>
+
+  <form id="volunteerForm">
+    <input type="text" id="name" placeholder="Name" required /><br><br>
+    <input type="email" id="email" placeholder="Email" required /><br><br>
+    <textarea id="message" placeholder="Why do you want to volunteer?"></textarea><br><br>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <script>
+    document.getElementById("volunteerForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const data = {
+        username: document.getElementById("name").value,
+        message: document.getElementById("message").value
+      };
+
+      await fetch("https://yourdomain.my.salesforce.com/services/apexrest/bluesky/webhook", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer MY_SECRET_TOKEN"
+        },
+        body: JSON.stringify(data)
+      });
+
+      alert("Submitted successfully!");
+    });
+  </script>
+</body>
+</html>
