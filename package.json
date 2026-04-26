@@ -1,0 +1,16 @@
+{
+  "name": "bluesky-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@atproto/api": "^0.19.9",
+    "dotenv": "^17.4.2"
+  },
+  "description": ""
+}
