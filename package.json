@@ -1,8 +1,10 @@
 {
   "name": "bluesky-bot",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "",
+  "main": "bot.js",
   "scripts": {
+    "start": "node bot.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,6 +14,5 @@
     "@atproto/api": "^0.19.9",
     "dotenv": "^17.4.2",
     "express": "^5.2.1"
-  },
-  "description": ""
+  }
 }
