@@ -1,9 +1,6 @@
 require('dotenv').config();
-await agent.login({
-  identifier: process.env.BLUESKY_IDENTIFIER,
-  password: process.env.BLUESKY_PASSWORD,
-});
 const { BskyAgent } = require('@atproto/api');
+const express = require("express");
 
 const agent = new BskyAgent({
   service: 'https://bsky.social',
@@ -11,8 +8,8 @@ const agent = new BskyAgent({
 
 // ===== CONFIG =====
 const FORM_LINK = 'https://smesh-force.github.io/bluesky-volunteer-form/';
-const KEYWORDS = ['volunteer', 'help', 'support', 'donate', 'join','love','nice '];
-const CHECK_INTERVAL = 10 * 60 * 1000; // 10 minutes
+const KEYWORDS = ['volunteer', 'help', 'support', 'donate', 'join', 'love', 'nice'];
+const CHECK_INTERVAL = 2 * 60 * 1000; // 🔁 every 2 minutes (faster testing)
 
 // ===== RANDOMIZED REPLIES =====
 const REPLIES = [
@@ -26,27 +23,30 @@ const replied = new Set();
 
 // ===== FUNCTIONS =====
 async function checkMentions() {
+  console.log("🔍 Checking mentions...");
+
   const notifications = await agent.listNotifications();
 
-  for (const note of notifications.data.notifications) {
+  console.log(`📩 Found ${notifications.data.notifications.length} notifications`);
 
+  for (const note of notifications.data.notifications) {
     if (note.reason !== 'mention') continue;
     if (replied.has(note.uri)) continue;
 
     const text = note.record?.text?.toLowerCase() || '';
+    console.log("📝 Text:", text);
 
     const matched = KEYWORDS.some(word => text.includes(word));
     if (!matched) continue;
 
-    // 🎯 Pick random reply
     const replyText = REPLIES[Math.floor(Math.random() * REPLIES.length)];
 
     try {
       await agent.post({
         text: replyText,
         reply: {
-          root: note.uri,
-          parent: note.uri,
+          root: { uri: note.uri, cid: note.cid },
+          parent: { uri: note.uri, cid: note.cid },
         },
       });
 
@@ -54,21 +54,19 @@ async function checkMentions() {
       console.log(`✅ Replied to: ${note.uri}`);
 
     } catch (err) {
-      console.error("Reply failed:", err.message);
+      console.error("❌ Reply failed:", err.message);
     }
   }
 }
 
 // ===== MAIN LOOP =====
 async function runBot() {
-
-  // 🔐 Safety check
-  if (!process.env.BSKY_PASSWORD) {
-    throw new Error("Missing BSKY_PASSWORD environment variable");
+  if (!process.env.BSKY_IDENTIFIER || !process.env.BSKY_PASSWORD) {
+    throw new Error("Missing Bluesky credentials in Railway variables");
   }
 
   await agent.login({
-    identifier: 'Deltarisingfdn.bsky.social',
+    identifier: process.env.BSKY_IDENTIFIER,
     password: process.env.BSKY_PASSWORD,
   });
 
@@ -78,11 +76,24 @@ async function runBot() {
     try {
       await checkMentions();
     } catch (error) {
-      console.error("Error:", error.message);
+      console.error("⚠️ Error:", error.message);
     }
 
     await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL));
   }
 }
 
+// ===== START BOT =====
 runBot();
+
+// ===== EXPRESS SERVER (for Railway) =====
+const app = express();
+
+app.get("/", (req, res) => {
+  res.send("Bot is running");
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🌐 Server running on port ${PORT}`);
+});
