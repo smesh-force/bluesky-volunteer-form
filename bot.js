@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { BskyAgent } = require('@atproto/api');
+const { BskyAgent, RichText } = require('@atproto/api');
 const express = require("express");
 
 const agent = new BskyAgent({
@@ -13,9 +13,9 @@ const CHECK_INTERVAL = 2 * 60 * 1000; // 🔁 every 2 minutes (faster testing)
 
 // ===== RANDOMIZED REPLIES =====
 const REPLIES = [
-  `Interested? Fill this form 👉 ${FORM_LINK}`,
-  `We’d love your support 🙌 Apply here: ${FORM_LINK}`,
-  `Join us today 🚀 Sign up: ${FORM_LINK}`
+  `Interested? Fill this form: https://smesh-force.github.io/bluesky-volunteer-form/`,
+  `We’d love your support. Apply here: https://smesh-force.github.io/bluesky-volunteer-form/`,
+  `Join us today. Sign up: https://smesh-force.github.io/bluesky-volunteer-form/`
 ];
 
 // ===== MEMORY =====
@@ -42,13 +42,17 @@ async function checkMentions() {
     const replyText = REPLIES[Math.floor(Math.random() * REPLIES.length)];
 
     try {
-      await agent.post({
-        text: replyText,
-        reply: {
-          root: { uri: note.uri, cid: note.cid },
-          parent: { uri: note.uri, cid: note.cid },
-        },
-      });
+      const rt = new RichText({ text: replyText });
+await rt.detectFacets(agent);
+
+await agent.post({
+  text: rt.text,
+  facets: rt.facets,
+  reply: {
+    root: { uri: note.uri, cid: note.cid },
+    parent: { uri: note.uri, cid: note.cid },
+  },
+});
 
       replied.add(note.uri);
       console.log(`✅ Replied to: ${note.uri}`);
