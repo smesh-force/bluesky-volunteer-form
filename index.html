@@ -28,29 +28,15 @@
   <button type="submit">Submit</button>
 </form>
 
-  <script>
-document.getElementById("volunteerForm").addEventListener("submit", async function(e) {
+ <script>
+document.getElementById("volunteerForm").addEventListener("submit", async function (e) {
   e.preventDefault();
 
   const data = {
     displayName: document.getElementById("name").value,
     email: document.getElementById("email").value,
     phone: document.getElementById("phone").value,
-    segment: document.getElementById("segment").value,
-    comment: document.getElementById("message").value,
-    action: "web-form"
-  };
-
-  try {
-   <script>
-document.getElementById("volunteerForm").addEventListener("submit", async function(e) {
-  e.preventDefault();
-
-  const data = {
-    displayName: document.getElementById("name").value,
-    email: document.getElementById("email").value,
-    phone: document.getElementById("phone").value,
-    segment: document.getElementById("segment").value,
+    segment: document.getElementById("segment").value || "Volunteer",
     comment: document.getElementById("message").value,
     action: "web-form"
   };
