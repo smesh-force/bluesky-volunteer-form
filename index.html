@@ -8,26 +8,37 @@
 <p>Please fill out the form and we’ll contact you shortly.</p>
 
   <form id="volunteerForm">
-    <input type="text" id="name" placeholder="Full Name" required /><br><br>
 
-  <input type="email" id="email" placeholder="Email Address" required /><br><br>
+  <input type="text" id="name" placeholder="Full Name" required />
 
-  <input type="tel" id="phone" placeholder="Phone Number" required /><br><br>
+  <input type="email" id="email" placeholder="Email Address" />
 
-  <textarea id="message" placeholder="How can we help you?"></textarea><br><br>
+  <input type="tel" id="phone" placeholder="Phone Number" />
 
-    <button type="submit">Submit Lead</button>
-  </form>
+  <!-- NEW FIELD: Segment -->
+  <select id="segment" required>
+    <option value="">Select Segment</option>
+    <option value="Volunteer">Volunteer</option>
+    <option value="Donor">Donor</option>
+    <option value="Supporter">Supporter</option>
+  </select>
+
+  <textarea id="message" placeholder="Why do you want to join?"></textarea>
+
+  <button type="submit">Submit</button>
+</form>
 
   <script>
 document.getElementById("volunteerForm").addEventListener("submit", async function(e) {
   e.preventDefault();
 
   const data = {
-    username: document.getElementById("name").value,
+    displayName: document.getElementById("name").value,
     email: document.getElementById("email").value,
     phone: document.getElementById("phone").value,
-    message: document.getElementById("message").value
+    segment: document.getElementById("segment").value,
+    comment: document.getElementById("message").value,
+    action: "web-form"
   };
 
   try {
