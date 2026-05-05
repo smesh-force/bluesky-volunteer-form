@@ -1,7 +1,6 @@
 {
   "name": "bluesky-bot",
   "version": "1.0.0",
-  "description": "",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js",
@@ -12,7 +11,10 @@
   "license": "ISC",
   "dependencies": {
     "@atproto/api": "^0.19.9",
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1"
-  }
+    "express": "^5.2.1",
+    "node-fetch": "^3.3.2"
+  },
+  "description": ""
 }
