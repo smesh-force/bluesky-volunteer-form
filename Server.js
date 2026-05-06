@@ -1,4 +1,4 @@
-```javascript id="x1r6cv"
+
 require("dotenv").config();
 
 const express = require("express");
@@ -41,4 +41,4 @@ app.get("/", (req,res)=>{
 app.listen(process.env.PORT || 3000, () => {
   console.log("Server running");
 });
-```
+
