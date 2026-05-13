@@ -1,9 +1,13 @@
- require('dotenv').config();
+require('dotenv').config();
 
 const express = require("express");
+const cors = require("cors");
 const { BskyAgent, RichText } = require('@atproto/api');
 
 const app = express();
+
+app.use(cors());
+app.use(express.json());
 
 const agent = new BskyAgent({
   service: 'https://bsky.social',
