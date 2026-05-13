@@ -171,6 +171,28 @@ app.post("/submit", async (req, res) => {
     });
   }
 });
+app.post("/lead", async (req, res) => {
+
+  try {
+
+    console.log("📨 Lead received:");
+    console.log(req.body);
+
+    res.json({
+      success: true,
+      message: "Lead submitted successfully"
+    });
+
+  } catch (error) {
+
+    console.error("❌ Backend Error:", error);
+
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
 app.listen(PORT, () => {
   console.log(`🌐 Server running on port ${PORT}`);
 });
