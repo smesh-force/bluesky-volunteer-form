@@ -1,209 +1,242 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Volunteer Signup</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delta Rising Foundation - Join Us</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f6f8fb;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+<style>
+body{
+  font-family: Arial, sans-serif;
+  background:#f4f6f9;
+  margin:0;
+  padding:30px;
+}
 
-    .container {
-      background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    }
+.container{
+  max-width:720px;
+  background:white;
+  margin:auto;
+  padding:30px;
+  border-radius:14px;
+  box-shadow:0 0 20px rgba(0,0,0,0.08);
+}
 
-    h2 {
-      margin-bottom: 5px;
-    }
+h1{
+  text-align:center;
+  color:#0d47a1;
+}
 
-    p {
-      margin-top: 0;
-      color: #666;
-      font-size: 14px;
-    }
+p{
+  text-align:center;
+  color:#555;
+}
 
-    input, textarea, select {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 6px;
-      border: 1px solid #ddd;
-      font-size: 14px;
-    }
+input,select,textarea{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  margin-bottom:18px;
+  border:1px solid #ccc;
+  border-radius:8px;
+  font-size:15px;
+}
 
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #1b74e4;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 15px;
-      margin-top: 10px;
-    }
+textarea{
+  min-height:120px;
+}
 
-    button:disabled {
-      background: #9bbcf3;
-      cursor: not-allowed;
-    }
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  background:#0d47a1;
+  color:white;
+  font-size:16px;
+  border-radius:8px;
+  cursor:pointer;
+}
 
-    .status {
-      margin-top: 10px;
-      font-size: 13px;
-      text-align: center;
-    }
-  </style>
+button:hover{
+  background:#08367c;
+}
+
+.hidden{
+  display:none;
+}
+
+.success{
+  color:green;
+  text-align:center;
+  margin-top:15px;
+}
+
+.error{
+  color:red;
+  text-align:center;
+  margin-top:15px;
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
-  <h2>Volunteer Signup</h2>
-  <p>Join our mission and make an impact today.</p>
 
-  <form id="volunteerForm">
+<h1>Join Delta Rising Foundation</h1>
+<p>Support our mission through volunteering, funding, partnerships or advocacy.</p>
 
-<<<<<<< HEAD
-  <input type="text" id="name" placeholder="Full Name" required />
+<form id="leadForm">
 
-  <input type="email" id="email" placeholder="Email Address" />
+<label>Full Name *</label>
+<input type="text" id="name" required>
 
-  <input type="tel" id="phone" placeholder="Phone Number" />
+<label>Email</label>
+<input type="email" id="email">
 
-  <!-- NEW FIELD: Segment -->
-  <select id="segment" required>
-    <option value="">Select Segment</option>
-    <option value="Volunteer">Volunteer</option>
-    <option value="Donor">Donor</option>
-    <option value="Supporter">Supporter</option>
-  </select>
+<label>Phone</label>
+<input type="tel" id="phone">
 
-  <textarea id="message" placeholder="Why do you want to join?"></textarea>
+<label>Stakeholder Type *</label>
+<select id="stakeholder" required>
+<option value="">Select</option>
+<option>Donor</option>
+<option>Carbon Buyer</option>
+<option>NCC Buyer</option>
+<option>Project Owner</option>
+<option>Investor</option>
+<option>Entrepreneur</option>
+<option>Partner</option>
+<option>Community Member</option>
+<option>Government</option>
+<option>Media</option>
+<option>Supplier</option>
+<option>Retail Manager</option>
+<option>Volunteer</option>
+<option>Other</option>
+</select>
 
-  <button type="submit">Submit</button>
+<label>Interest Segment</label>
+<select id="interest">
+<option value="">Select</option>
+<option>Cultivating Women Leaders</option>
+<option>Green Sound Screen</option>
+<option>Heptagon Butterfly Tunnel</option>
+<option>More Shade</option>
+<option>Music</option>
+<option>Nursery Plant</option>
+<option>Science</option>
+<option>Social Entrepreneurs</option>
+<option>Surviving Current Regime</option>
+<option>Sustainability Showcases</option>
+<option>Carbon Project Finance</option>
+<option>Carbon Project Owners</option>
+<option>Carbon Credit Buyers</option>
+<option>NCC Finance</option>
+<option>NCC Project Owners</option>
+<option>NCC Buyers</option>
+<option>Must CARB Offset</option>
+</select>
+
+<label>Lead Source *</label>
+<select id="leadsource" required>
+<option value="">Select</option>
+<option>Web</option>
+<option>Social Media</option>
+<option>Event</option>
+<option>Phone Inquiry</option>
+<option>Partner Referral</option>
+<option>Word of mouth</option>
+</select>
+
+<div id="socialBox" class="hidden">
+<label>Social Media Platform</label>
+<select id="socialplatform">
+<option value="">Select</option>
+<option>Bluesky</option>
+<option>FaceBook</option>
+<option>InstaGram</option>
+<option>Linkedin</option>
+<option>YouTube</option>
+</select>
+</div>
+
+<label>Priority</label>
+<select id="priority">
+<option>Medium</option>
+<option>High</option>
+<option>Low</option>
+<option>VIP</option>
+<option>Urgent</option>
+</select>
+
+<label>Message</label>
+<textarea id="comment"></textarea>
+
+<button type="submit">Submit</button>
+
+<div id="msg"></div>
+
 </form>
 
- <script>
-document.getElementById("volunteerForm").addEventListener("submit", async function (e) {
-=======
-    <input type="text" id="name" placeholder="Full Name" required />
-
-    <input type="email" id="email" placeholder="Email Address" required />
-
-    <input type="tel" id="phone" placeholder="Phone Number" required />
-
-    <!-- NEW FIELD (added professionally) -->
-    <select id="interest" required>
-      <option value="">Select Interest Area</option>
-      <option value="Community Support">Community Support</option>
-      <option value="Education">Education</option>
-      <option value="Healthcare">Healthcare</option>
-      <option value="Fundraising">Fundraising</option>
-    </select>
-
-    <textarea id="message" placeholder="Tell us why you'd like to join"></textarea>
-
-    <button id="submitBtn" type="submit">Submit Application</button>
-
-    <div class="status" id="status"></div>
-  </form>
 </div>
 
 <script>
-const form = document.getElementById("volunteerForm");
-const statusEl = document.getElementById("status");
-const btn = document.getElementById("submitBtn");
+const leadsource = document.getElementById("leadsource");
+const socialBox = document.getElementById("socialBox");
 
-form.addEventListener("submit", async (e) => {
- (fix backend logging + salesforce forwarding)
-  e.preventDefault();
-
-  btn.disabled = true;
-  statusEl.textContent = "Submitting...";
-
-  const data = {
-
-    displayName: document.getElementById("name").value,
-    email: document.getElementById("email").value,
-    phone: document.getElementById("phone").value,
-    segment: document.getElementById("segment").value || "Volunteer",
-    comment: document.getElementById("message").value,
-    action: "web-form"
-  };
-
-  try {
-    const response = await fetch("https://bluesky-volunteer-form.up.railway.app/lead", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    });
-
-    if (response.ok) {
-      alert("Success! Lead submitted 🎉");
-      document.getElementById("volunteerForm").reset();
-    } else {
-      alert("Failed to submit ❌");
-    }
-
-  } catch (error) {
-    console.error(error);
-    alert("Network error ❌");
+leadsource.addEventListener("change", function(){
+  if(this.value === "Social Media"){
+    socialBox.classList.remove("hidden");
+  }else{
+    socialBox.classList.add("hidden");
   }
 });
-</script>
-=======
-    name: document.getElementById("name").value,
-    email: document.getElementById("email").value,
-    phone: document.getElementById("phone").value,
-    interest: document.getElementById("interest").value,
-    message: document.getElementById("message").value
-  };
 
-  try {
-    const response = await fetch(
-      "https://deltarisingfoundation--obi.sandbox.my.salesforce.com/services/apexrest/bluesky/webhook",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer MY_SECRET_TOKEN"
-        },
-        body: JSON.stringify(data)
-      }
-    );
+document.getElementById("leadForm").addEventListener("submit", async function(e){
 
-    if (response.ok) {
-      statusEl.textContent = "Success! Redirecting...";
-      window.location.href = "success.html";
-    } else {
-      statusEl.textContent = "Submission failed. Try again.";
-      window.location.href = "error.html";
-    }
+e.preventDefault();
 
-  } catch (err) {
-    statusEl.textContent = "Network error. Try again.";
-    window.location.href = "error.html";
-  } finally {
-    btn.disabled = false;
-  }
+const data = {
+displayName: document.getElementById("name").value,
+email: document.getElementById("email").value,
+phone: document.getElementById("phone").value,
+stakeholder: document.getElementById("stakeholder").value,
+interest: document.getElementById("interest").value,
+leadsource: document.getElementById("leadsource").value,
+socialplatform: document.getElementById("socialplatform").value,
+priority: document.getElementById("priority").value,
+comment: document.getElementById("comment").value,
+lifecycle: "New Lead"
+};
+
+const msg = document.getElementById("msg");
+msg.innerHTML = "Submitting...";
+
+try{
+
+const response = await fetch("https://bluesky-volunteer-form-production.up.railway.app",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify(data)
+});
+
+if(response.ok){
+msg.innerHTML = '<p class="success">Submitted Successfully 🎉</p>';
+document.getElementById("leadForm").reset();
+socialBox.classList.add("hidden");
+}else{
+msg.innerHTML = '<p class="error">Submission failed ❌</p>';
+}
+
+}catch(err){
+msg.innerHTML = '<p class="error">Network error ❌</p>';
+}
+
 });
 </script>
 
 </body>
 </html>
->>>>>>> e4e5a20 (fix backend logging + salesforce forwarding)
