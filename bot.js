@@ -128,7 +128,28 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+app.post("/submit", async (req, res) => {
 
+  try {
+
+    console.log("📨 Form submission received:");
+    console.log(req.body);
+
+    res.json({
+      success: true,
+      message: "Submission received"
+    });
+
+  } catch (err) {
+
+    console.error("❌ Submit error:", err);
+
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
+});
 app.listen(PORT, () => {
   console.log(`🌐 Server running on port ${PORT}`);
 });

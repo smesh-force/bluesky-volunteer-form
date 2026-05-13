@@ -1,7 +1,6 @@
 require("dotenv").config();
 
 const express = require("express");
-const fetch = require("node-fetch");
 const cors = require("cors");
 
 const app = express();
@@ -13,7 +12,8 @@ app.post("/lead", async (req, res) => {
 
   try {
 
-    const sourceType = req.body.socialplatform ? "Social Media" : "Web";
+    const sourceType =
+      req.body.socialplatform ? "Social Media" : "Web";
 
     const payload = {
       displayName: req.body.displayName,
@@ -31,37 +31,33 @@ app.post("/lead", async (req, res) => {
       lifecycle: "New Lead"
     };
 
-    console.log("Sending to Salesforce:");
+    console.log("📨 Lead received:");
     console.log(payload);
 
-    const response = await fetch(process.env.SALESFORCE_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.SF_TOKEN}`
-      },
-      body: JSON.stringify(payload)
+    res.json({
+      success: true,
+      message: "Lead submitted successfully"
     });
-
-    const text = await response.text();
-
-    console.log("Salesforce Response:", text);
-
-    res.status(response.status).send(text);
 
   } catch (error) {
 
-    console.error(error);
-    res.status(500).send("Backend Error");
+    console.error("❌ Backend Error:", error);
+
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
 
   }
 
 });
 
-app.get("/", (req,res)=>{
+app.get("/", (req, res) => {
   res.send("Backend Live 🚀");
 });
 
-app.listen(process.env.PORT || 3000, ()=>{
-  console.log("Server Running");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
