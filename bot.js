@@ -128,6 +128,27 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+app.post("/lead", async (req, res) => {
+
+  try {
+
+    console.log("📨 Lead received:");
+    console.log(req.body);
+
+    res.json({
+      success: true,
+      message: "Lead submitted successfully"
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      success: false
+    });
+  }
+});
 app.post("/submit", async (req, res) => {
 
   try {
