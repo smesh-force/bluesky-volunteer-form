@@ -10,46 +10,39 @@ app.use(express.json());
 
 app.post("/lead", async (req, res) => {
 
+  console.log("🔥 Incoming payload:");
+  console.log(req.body);
+
   try {
 
-    const sourceType =
-      req.body.socialplatform ? "Social Media" : "Web";
+    const response = await fetch(process.env.SALESFORCE_URL, {
 
-    const payload = {
-      displayName: req.body.displayName,
-      email: req.body.email,
-      phone: req.body.phone,
+      method: "POST",
 
-      stakeholder: req.body.stakeholder,
-      interest: req.body.interest,
-      comment: req.body.comment,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.SF_TOKEN}`
+      },
 
-      leadsource: sourceType,
-      socialplatform: req.body.socialplatform || "",
-
-      priority: "Medium",
-      lifecycle: "New Lead"
-    };
-
-    console.log("📨 Lead received:");
-    console.log(payload);
-
-    res.json({
-      success: true,
-      message: "Lead submitted successfully"
+      body: JSON.stringify(req.body)
     });
 
-  } catch (error) {
+    const text = await response.text();
+
+    console.log("📩 Salesforce Status:", response.status);
+    console.log("📩 Salesforce Response:", text);
+
+    // RETURN REAL SALESFORCE RESPONSE
+    return res.status(response.status).send(text);
+
+  } catch(error){
 
     console.error("❌ Backend Error:", error);
 
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-
+    return res.status(500).send(
+      "Backend Error: " + error.message
+    );
   }
-
 });
 
 app.get("/", (req, res) => {
