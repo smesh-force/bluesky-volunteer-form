@@ -3,9 +3,17 @@
 BLUESKY → SALESFORCE BACKEND
 server.js
 =========================================================
+FEATURES:
+✔ Express Server
+✔ /lead Endpoint
+✔ Salesforce OAuth Authentication
+✔ Apex REST Forwarding
+✔ Error Handling
+✔ Debug Logging
+=========================================================
 */
 
-require('dotenv').config();
+require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
@@ -13,7 +21,7 @@ const fetch = require("node-fetch");
 
 /*
 =========================================================
-APP SETUP
+APP CONFIG
 =========================================================
 */
 const app = express();
@@ -25,12 +33,26 @@ const PORT = process.env.PORT || 3000;
 
 /*
 =========================================================
+SALESFORCE CONFIG
+=========================================================
+*/
+const SF_LOGIN_URL =
+  "https://test.salesforce.com/services/oauth2/token";
+
+const SF_REST_ENDPOINT =
+  "/services/apexrest/bluesky/webhook";
+
+/*
+=========================================================
 HEALTH CHECK
 =========================================================
 */
 app.get("/", (req, res) => {
 
-  res.send("🚀 Backend Live");
+  res.status(200).send({
+    success: true,
+    message: "🚀 Backend Live"
+  });
 
 });
 
@@ -41,11 +63,15 @@ GET SALESFORCE ACCESS TOKEN
 */
 async function getSalesforceToken() {
 
+  console.log("==================================");
+  console.log("🔐 AUTHENTICATING WITH SALESFORCE");
+  console.log("==================================");
+
   try {
 
     const authResponse = await fetch(
 
-      "https://test.salesforce.com/services/oauth2/token",
+      SF_LOGIN_URL,
 
       {
         method: "POST",
@@ -77,12 +103,9 @@ async function getSalesforceToken() {
     const authData =
       await authResponse.json();
 
-    console.log("==================================");
-    console.log("🔐 OAUTH RESPONSE");
-    console.log("==================================");
-
-    console.log("Status:", authResponse.status);
-    console.log(authData);
+    console.log("OAuth Status:",
+      authResponse.status
+    );
 
     /*
     =====================================================
@@ -91,12 +114,27 @@ async function getSalesforceToken() {
     */
     if (!authData.access_token) {
 
+      console.error(
+        "❌ SALESFORCE AUTH FAILED"
+      );
+
+      console.error(authData);
+
       throw new Error(
-        "Salesforce authentication failed"
+        "Unable to authenticate with Salesforce"
       );
     }
 
-    return authData;
+    console.log("✅ Salesforce Auth Success");
+
+    return {
+
+      accessToken:
+        authData.access_token,
+
+      instanceUrl:
+        authData.instance_url
+    };
 
   } catch (error) {
 
@@ -111,20 +149,24 @@ async function getSalesforceToken() {
 
 /*
 =========================================================
-FORWARD DATA TO SALESFORCE
+SEND DATA TO SALESFORCE
 =========================================================
 */
-async function forwardToSalesforce(
+async function sendToSalesforce(
   accessToken,
   instanceUrl,
   payload
 ) {
 
+  console.log("==================================");
+  console.log("📤 SENDING DATA TO SALESFORCE");
+  console.log("==================================");
+
   try {
 
     const sfResponse = await fetch(
 
-      `${instanceUrl}/services/apexrest/bluesky/webhook`,
+      `${instanceUrl}${SF_REST_ENDPOINT}`,
 
       {
         method: "POST",
@@ -149,14 +191,21 @@ async function forwardToSalesforce(
     console.log("📩 SALESFORCE RESPONSE");
     console.log("==================================");
 
-    console.log("Status:", sfResponse.status);
-    console.log("Body:", responseText);
+    console.log("Status:",
+      sfResponse.status
+    );
+
+    console.log("Body:",
+      responseText
+    );
 
     return {
 
-      status: sfResponse.status,
+      status:
+        sfResponse.status,
 
-      body: responseText
+      body:
+        responseText
     };
 
   } catch (error) {
@@ -172,61 +221,72 @@ async function forwardToSalesforce(
 
 /*
 =========================================================
-CREATE LEAD ENDPOINT
+LEAD ENDPOINT
 POST /lead
 =========================================================
 */
 app.post("/lead", async (req, res) => {
 
+  console.log("==================================");
+  console.log("📨 INCOMING LEAD REQUEST");
+  console.log("==================================");
+
+  console.log(req.body);
+
   try {
-
-    console.log("==================================");
-    console.log("📨 INCOMING LEAD");
-    console.log("==================================");
-
-    console.log(req.body);
 
     /*
     =====================================================
     STEP 1: AUTHENTICATE
     =====================================================
     */
-    const authData =
-      await getSalesforceToken();
+    const auth = await getSalesforceToken();
 
     /*
     =====================================================
-    STEP 2: FORWARD TO SALESFORCE
+    STEP 2: SEND TO SALESFORCE
     =====================================================
     */
     const result =
-      await forwardToSalesforce(
+      await sendToSalesforce(
 
-        authData.access_token,
+        auth.accessToken,
 
-        authData.instance_url,
+        auth.instanceUrl,
 
         req.body
       );
 
     /*
     =====================================================
-    RETURN RESPONSE
+    RETURN SUCCESS RESPONSE
     =====================================================
     */
-    return res
-      .status(result.status)
-      .send(result.body);
+    return res.status(result.status).send({
+
+      success: true,
+
+      message:
+        "Lead forwarded successfully",
+
+      salesforceResponse:
+        result.body
+    });
 
   } catch (error) {
 
+    /*
+    =====================================================
+    ERROR HANDLING
+    =====================================================
+    */
     console.log("==================================");
     console.log("❌ BACKEND ERROR");
     console.log("==================================");
 
     console.error(error);
 
-    return res.status(500).json({
+    return res.status(500).send({
 
       success: false,
 
