@@ -1,7 +1,7 @@
 /*
 =========================================================
 BLUESKY → SALESFORCE BACKEND
-Clean Rearranged Version
+server.js
 =========================================================
 */
 
@@ -9,6 +9,9 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+
+// Uncomment if using Node below v18
+// const fetch = require("node-fetch");
 
 const app = express();
 
@@ -26,7 +29,9 @@ HEALTH CHECK
 =========================================================
 */
 app.get("/", (req, res) => {
+
   res.send("Backend Live 🚀");
+
 });
 
 /*
@@ -36,27 +41,95 @@ CREATE LEAD ENDPOINT
 */
 app.post("/lead", async (req, res) => {
 
-  console.log("==================================");
-  console.log("🔥 Incoming Payload");
-  console.log("==================================");
-  console.log(req.body);
-
   try {
+
+    console.log("==================================");
+    console.log("📨 Incoming Lead");
+    console.log("==================================");
+
+    console.log(req.body);
 
     /*
     =====================================================
-    SEND TO SALESFORCE
+    STEP 1: GET SALESFORCE ACCESS TOKEN
     =====================================================
     */
-    const response = await fetch(
-      process.env.SALESFORCE_URL,
+    const authResponse = await fetch(
+
+      "https://test.salesforce.com/services/oauth2/token",
+
       {
         method: "POST",
 
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type":
+            "application/x-www-form-urlencoded"
+        },
+
+        body: new URLSearchParams({
+
+          grant_type: "password",
+
+          client_id:
+            process.env.SF_CLIENT_ID,
+
+          client_secret:
+            process.env.SF_CLIENT_SECRET,
+
+          username:
+            process.env.SF_USERNAME,
+
+          password:
+            process.env.SF_PASSWORD
+        })
+      }
+    );
+
+    const authData =
+      await authResponse.json();
+
+    console.log("==================================");
+    console.log("🔐 OAuth Response");
+    console.log("==================================");
+
+    console.log(authData);
+
+    /*
+    =====================================================
+    CHECK TOKEN
+    =====================================================
+    */
+    if (!authData.access_token) {
+
+      return res.status(401).json({
+
+        success: false,
+
+        error: "Salesforce Authentication Failed",
+
+        details: authData
+      });
+    }
+
+    /*
+    =====================================================
+    STEP 2: SEND DATA TO SALESFORCE
+    =====================================================
+    */
+    const sfResponse = await fetch(
+
+      `${authData.instance_url}/services/apexrest/bluesky/webhook`,
+
+      {
+        method: "POST",
+
+        headers: {
+
+          "Content-Type":
+            "application/json",
+
           "Authorization":
-            `Bearer ${process.env.SF_TOKEN}`
+            `Bearer ${authData.access_token}`
         },
 
         body: JSON.stringify(req.body)
@@ -68,42 +141,24 @@ app.post("/lead", async (req, res) => {
     READ SALESFORCE RESPONSE
     =====================================================
     */
-    const text = await response.text();
+    const responseText =
+      await sfResponse.text();
 
     console.log("==================================");
     console.log("📩 Salesforce Response");
     console.log("==================================");
 
-    console.log("Status:", response.status);
-    console.log("Body:", text);
+    console.log("Status:", sfResponse.status);
+    console.log("Body:", responseText);
 
     /*
     =====================================================
-    DEBUGGING
-    =====================================================
-    */
-    console.log("==================================");
-    console.log("🛠 ENVIRONMENT CHECK");
-    console.log("==================================");
-
-    console.log(
-      "SF URL:",
-      process.env.SALESFORCE_URL
-    );
-
-    console.log(
-      "SF TOKEN EXISTS:",
-      !!process.env.SF_TOKEN
-    );
-
-    /*
-    =====================================================
-    RETURN SALESFORCE RESPONSE
+    RETURN RESPONSE
     =====================================================
     */
     return res
-      .status(response.status)
-      .send(text);
+      .status(sfResponse.status)
+      .send(responseText);
 
   } catch (error) {
 
@@ -112,15 +167,16 @@ app.post("/lead", async (req, res) => {
     ERROR HANDLING
     =====================================================
     */
-    console.error("==================================");
-    console.error("❌ BACKEND ERROR");
-    console.error("==================================");
+    console.log("==================================");
+    console.log("❌ BACKEND ERROR");
+    console.log("==================================");
 
-    console.error("Message:", error.message);
-    console.error("Full Error:", error);
+    console.error(error);
 
-    return res.status(500).send({
+    return res.status(500).json({
+
       success: false,
+
       error: error.message
     });
   }
