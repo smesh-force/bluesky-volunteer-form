@@ -3,14 +3,6 @@
 BLUESKY → SALESFORCE BACKEND
 server.js
 =========================================================
-FEATURES:
-✔ Express Server
-✔ /lead Endpoint
-✔ Salesforce OAuth Authentication
-✔ Apex REST Forwarding
-✔ Error Handling
-✔ Debug Logging
-=========================================================
 */
 
 require("dotenv").config();
@@ -21,7 +13,7 @@ const fetch = require("node-fetch");
 
 /*
 =========================================================
-APP CONFIG
+APP SETUP
 =========================================================
 */
 const app = express();
@@ -49,7 +41,7 @@ HEALTH CHECK
 */
 app.get("/", (req, res) => {
 
-  res.status(200).send({
+  res.status(200).json({
     success: true,
     message: "🚀 Backend Live"
   });
@@ -103,15 +95,11 @@ async function getSalesforceToken() {
     const authData =
       await authResponse.json();
 
-    console.log("OAuth Status:",
+    console.log(
+      "OAuth Status:",
       authResponse.status
     );
 
-    /*
-    =====================================================
-    TOKEN VALIDATION
-    =====================================================
-    */
     if (!authData.access_token) {
 
       console.error(
@@ -125,7 +113,9 @@ async function getSalesforceToken() {
       );
     }
 
-    console.log("✅ Salesforce Auth Success");
+    console.log(
+      "✅ Salesforce Auth Success"
+    );
 
     return {
 
@@ -191,11 +181,13 @@ async function sendToSalesforce(
     console.log("📩 SALESFORCE RESPONSE");
     console.log("==================================");
 
-    console.log("Status:",
+    console.log(
+      "Status:",
       sfResponse.status
     );
 
-    console.log("Body:",
+    console.log(
+      "Body:",
       responseText
     );
 
@@ -221,26 +213,26 @@ async function sendToSalesforce(
 
 /*
 =========================================================
-LEAD ENDPOINT
 POST /lead
 =========================================================
 */
 app.post("/lead", async (req, res) => {
 
-  console.log("==================================");
-  console.log("📨 INCOMING LEAD REQUEST");
-  console.log("==================================");
-
-  console.log(req.body);
-
   try {
+
+    console.log("==================================");
+    console.log("📨 INCOMING LEAD");
+    console.log("==================================");
+
+    console.log(req.body);
 
     /*
     =====================================================
     STEP 1: AUTHENTICATE
     =====================================================
     */
-    const auth = await getSalesforceToken();
+    const auth =
+      await getSalesforceToken();
 
     /*
     =====================================================
@@ -259,10 +251,10 @@ app.post("/lead", async (req, res) => {
 
     /*
     =====================================================
-    RETURN SUCCESS RESPONSE
+    SUCCESS RESPONSE
     =====================================================
     */
-    return res.status(result.status).send({
+    return res.status(result.status).json({
 
       success: true,
 
@@ -275,18 +267,13 @@ app.post("/lead", async (req, res) => {
 
   } catch (error) {
 
-    /*
-    =====================================================
-    ERROR HANDLING
-    =====================================================
-    */
     console.log("==================================");
     console.log("❌ BACKEND ERROR");
     console.log("==================================");
 
     console.error(error);
 
-    return res.status(500).send({
+    return res.status(500).json({
 
       success: false,
 
