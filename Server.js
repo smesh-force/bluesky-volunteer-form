@@ -87,7 +87,8 @@ app.post("/lead", async (req, res) => {
 
     const authData =
       await authResponse.json();
-
+console.log("OAuth Status:", authResponse.status);
+console.log("OAuth Data:", authData);
     console.log("==================================");
     console.log("🔐 OAuth Response");
     console.log("==================================");
