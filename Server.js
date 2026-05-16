@@ -5,16 +5,14 @@ server.js
 =========================================================
 */
 
-require("dotenv").config();
+require('dotenv').config();
 
 const express = require("express");
 const cors = require("cors");
+const fetch = require("node-fetch");
 
-// Required for Node versions below 18
-const fetch = (...args) =>
-  import("node-fetch").then(
-    ({ default: fetch }) => fetch(...args)
-  );
+const { BskyAgent, RichText } =
+  require('@atproto/api');
 
 /*
 =========================================================
