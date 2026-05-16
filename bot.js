@@ -1,174 +1,410 @@
-require('dotenv').config();
+/*
+=========================================================
+BLUESKY BOT + SALESFORCE INTEGRATION
+bot.js
+=========================================================
+*/
+
+require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const fetch = (...args) =>
-  import('node-fetch').then(({default: fetch}) => fetch(...args));
-const { BskyAgent, RichText } = require('@atproto/api');
 
+const fetch = (...args) =>
+  import("node-fetch").then(
+    ({ default: fetch }) => fetch(...args)
+  );
+
+const {
+  BskyAgent,
+  RichText
+} = require("@atproto/api");
+
+/*
+=========================================================
+APP SETUP
+=========================================================
+*/
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// =====================================================
-// EXPRESS CONFIG
-// =====================================================
 const PORT = process.env.PORT || 3000;
 
-const SALESFORCE_URL =
-  process.env.SALESFORCE_URL;
-
-const SF_TOKEN =
-  process.env.SF_TOKEN;
-
-// =====================================================
-// BLUESKY CONFIG
-// =====================================================
+/*
+=========================================================
+BLUESKY CONFIG
+=========================================================
+*/
 const agent = new BskyAgent({
-  service: 'https://bsky.social',
+  service: "https://bsky.social"
 });
 
 const FORM_LINK =
-  'https://smesh-force.github.io/bluesky-volunteer-form/';
-
-const KEYWORDS = [
-  'volunteer',
-  'help',
-  'support',
-  'donate',
-  'join',
-  'love',
-  'nice'
-];
+  "https://smesh-force.github.io/bluesky-volunteer-form/";
 
 const CHECK_INTERVAL =
   2 * 60 * 1000;
 
-// =====================================================
-// BOT REPLIES
-// =====================================================
-const REPLIES = [
-  `Interested? Fill this form: ${FORM_LINK}`,
+/*
+=========================================================
+KEYWORDS
+=========================================================
+*/
+const KEYWORDS = [
 
-  `We’d love your support. Apply here: ${FORM_LINK}`,
-
-  `Join us today. Sign up: ${FORM_LINK}`
+  "volunteer",
+  "help",
+  "support",
+  "donate",
+  "join",
+  "community",
+  "interested",
+  "apply",
+  "love",
+  "nice"
 ];
 
-// =====================================================
-// MEMORY
-// =====================================================
-const replied = new Set();
+/*
+=========================================================
+AUTO REPLIES
+=========================================================
+*/
+const REPLIES = [
 
-// =====================================================
-// CHECK MENTIONS
-// =====================================================
+  `Interested in volunteering? Fill this form: ${FORM_LINK}`,
+
+  `We’d love your support 💙 Apply here: ${FORM_LINK}`,
+
+  `Join our mission today 🚀 Sign up here: ${FORM_LINK}`,
+
+  `Thanks for your interest 🙌 Register here: ${FORM_LINK}`
+];
+
+/*
+=========================================================
+MEMORY
+Prevents duplicate replies
+=========================================================
+*/
+const repliedPosts = new Set();
+
+/*
+=========================================================
+GENERATE RANDOM REPLY
+=========================================================
+*/
+function getRandomReply() {
+
+  return REPLIES[
+    Math.floor(Math.random() * REPLIES.length)
+  ];
+}
+
+/*
+=========================================================
+SEND DATA TO SALESFORCE
+=========================================================
+*/
+async function sendToSalesforce(data) {
+
+  try {
+
+    /*
+    =====================================================
+    GET SALESFORCE TOKEN
+    =====================================================
+    */
+    const authResponse = await fetch(
+
+      "https://test.salesforce.com/services/oauth2/token",
+
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "application/x-www-form-urlencoded"
+        },
+
+        body: new URLSearchParams({
+
+          grant_type: "password",
+
+          client_id:
+            process.env.SF_CLIENT_ID,
+
+          client_secret:
+            process.env.SF_CLIENT_SECRET,
+
+          username:
+            process.env.SF_USERNAME,
+
+          password:
+            process.env.SF_PASSWORD
+        })
+      }
+    );
+
+    const authData =
+      await authResponse.json();
+
+    /*
+    =====================================================
+    TOKEN CHECK
+    =====================================================
+    */
+    if (!authData.access_token) {
+
+      console.error(
+        "❌ Salesforce Auth Failed"
+      );
+
+      console.error(authData);
+
+      return;
+    }
+
+    /*
+    =====================================================
+    SEND TO APEX REST
+    =====================================================
+    */
+    const sfResponse = await fetch(
+
+      `${authData.instance_url}/services/apexrest/bluesky/webhook`,
+
+      {
+        method: "POST",
+
+        headers: {
+
+          "Content-Type":
+            "application/json",
+
+          "Authorization":
+            `Bearer ${authData.access_token}`
+        },
+
+        body: JSON.stringify(data)
+      }
+    );
+
+    const text =
+      await sfResponse.text();
+
+    console.log("==================================");
+    console.log("📩 Salesforce Response");
+    console.log("==================================");
+
+    console.log("Status:", sfResponse.status);
+    console.log("Body:", text);
+
+  } catch (err) {
+
+    console.error(
+      "❌ Salesforce Error:",
+      err.message
+    );
+  }
+}
+
+/*
+=========================================================
+CHECK MENTIONS
+=========================================================
+*/
 async function checkMentions() {
 
   console.log("🔍 Checking mentions...");
 
-  const notifications =
-    await agent.listNotifications();
+  try {
 
-  console.log(
-    `📩 Found ${notifications.data.notifications.length} notifications`
-  );
+    const notifications =
+      await agent.listNotifications();
 
-  for (const note of notifications.data.notifications) {
+    const mentions =
+      notifications.data.notifications;
 
-    // Skip non-mentions
-    if (note.reason !== 'mention') {
-      continue;
-    }
-
-    // Skip already replied
-    if (replied.has(note.uri)) {
-      continue;
-    }
-
-    const text =
-      note.record?.text?.toLowerCase() || '';
-
-    console.log("📝 Text:", text);
-
-    // Keyword Match
-    const matched = KEYWORDS.some(word =>
-      text.includes(word)
+    console.log(
+      `📩 Found ${mentions.length} notifications`
     );
 
-    if (!matched) {
-      continue;
-    }
+    for (const note of mentions) {
 
-    // Random Reply
-    const replyText =
-      REPLIES[
-        Math.floor(Math.random() * REPLIES.length)
-      ];
+      /*
+      ===================================================
+      SKIP NON-MENTIONS
+      ===================================================
+      */
+      if (note.reason !== "mention") {
+        continue;
+      }
 
-    try {
+      /*
+      ===================================================
+      SKIP ALREADY REPLIED
+      ===================================================
+      */
+      if (repliedPosts.has(note.uri)) {
+        continue;
+      }
 
-      const rt = new RichText({
-        text: replyText
-      });
+      /*
+      ===================================================
+      EXTRACT TEXT
+      ===================================================
+      */
+      const text =
+        note.record?.text?.toLowerCase() || "";
 
-      await rt.detectFacets(agent);
+      console.log("📝 Mention:", text);
 
-      await agent.post({
+      /*
+      ===================================================
+      KEYWORD MATCH
+      ===================================================
+      */
+      const matched =
+        KEYWORDS.some(keyword =>
+          text.includes(keyword)
+        );
 
-        text: rt.text,
+      if (!matched) {
+        continue;
+      }
 
-        facets: rt.facets,
+      /*
+      ===================================================
+      GENERATE REPLY
+      ===================================================
+      */
+      const replyText =
+        getRandomReply();
 
-        reply: {
+      try {
 
-          root: {
-            uri: note.uri,
-            cid: note.cid
-          },
+        /*
+        ===============================================
+        FORMAT RICH TEXT
+        ===============================================
+        */
+        const rt = new RichText({
+          text: replyText
+        });
 
-          parent: {
-            uri: note.uri,
-            cid: note.cid
+        await rt.detectFacets(agent);
+
+        /*
+        ===============================================
+        REPLY TO POST
+        ===============================================
+        */
+        await agent.post({
+
+          text: rt.text,
+
+          facets: rt.facets,
+
+          reply: {
+
+            root: {
+              uri: note.uri,
+              cid: note.cid
+            },
+
+            parent: {
+              uri: note.uri,
+              cid: note.cid
+            }
           }
-        }
-      });
+        });
 
-      replied.add(note.uri);
+        /*
+        ===============================================
+        SAVE TO MEMORY
+        ===============================================
+        */
+        repliedPosts.add(note.uri);
 
-      console.log(
-        `✅ Replied to: ${note.uri}`
-      );
+        console.log(
+          `✅ Replied to mention`
+        );
 
-    } catch (err) {
+        /*
+        ===============================================
+        SEND TO SALESFORCE
+        ===============================================
+        */
+        await sendToSalesforce({
 
-      console.error(
-        "❌ Reply failed:",
-        err.message
-      );
+          displayName:
+            note.author?.displayName,
+
+          username:
+            note.author?.handle,
+
+          comment:
+            note.record?.text,
+
+          action:
+            "Mention Reply",
+
+          socialplatform:
+            "Bluesky",
+
+          leadsource:
+            "Bluesky Bot"
+        });
+
+      } catch (err) {
+
+        console.error(
+          "❌ Reply Failed:",
+          err.message
+        );
+      }
     }
+
+  } catch (err) {
+
+    console.error(
+      "❌ Mention Check Failed:",
+      err.message
+    );
   }
 }
 
-// =====================================================
-// RUN BOT
-// =====================================================
+/*
+=========================================================
+RUN BOT LOOP
+=========================================================
+*/
 async function runBot() {
 
   try {
 
-    // Validate Credentials
+    /*
+    =====================================================
+    VALIDATE ENV VARIABLES
+    =====================================================
+    */
     if (
       !process.env.BSKY_IDENTIFIER ||
       !process.env.BSKY_PASSWORD
     ) {
+
       throw new Error(
         "Missing Bluesky credentials"
       );
     }
 
-    // Login
+    /*
+    =====================================================
+    LOGIN
+    =====================================================
+    */
     await agent.login({
 
       identifier:
@@ -178,121 +414,67 @@ async function runBot() {
         process.env.BSKY_PASSWORD
     });
 
-    console.log("🚀 Bot running...");
+    console.log("==================================");
+    console.log("🚀 Bluesky Bot Running");
+    console.log("==================================");
 
-    // Infinite Loop
+    /*
+    =====================================================
+    INFINITE LOOP
+    =====================================================
+    */
     while (true) {
 
-      try {
-
-        await checkMentions();
-
-      } catch (err) {
-
-        console.error(
-          "⚠️ Mention check error:",
-          err.message
-        );
-      }
+      await checkMentions();
 
       await new Promise(resolve =>
-        setTimeout(resolve, CHECK_INTERVAL)
+
+        setTimeout(
+          resolve,
+          CHECK_INTERVAL
+        )
       );
     }
 
   } catch (err) {
 
     console.error(
-      "🔥 Bot crashed:",
+      "🔥 BOT CRASHED:",
       err.message
     );
   }
 }
 
-// =====================================================
-// HEALTH CHECK
-// =====================================================
+/*
+=========================================================
+HEALTH CHECK
+=========================================================
+*/
 app.get("/", (req, res) => {
 
-  res.send("🚀 Bluesky Bot Running");
-});
-
-// =====================================================
-// LEAD ENDPOINT
-// =====================================================
-app.post("/lead", async (req, res) => {
-
-  try {
-
-    console.log("📨 Lead received:");
-    console.log(req.body);
-
-    // =============================================
-    // SEND TO SALESFORCE
-    // =============================================
-    const response = await fetch(
-      SALESFORCE_URL,
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization":
-            `Bearer ${SF_TOKEN}`
-        },
-
-        body: JSON.stringify(req.body)
-      }
-    );
-
-    // =============================================
-    // SALESFORCE RESPONSE
-    // =============================================
-    const text =
-      await response.text();
-
-    console.log(
-      "📩 Salesforce Status:",
-      response.status
-    );
-
-    console.log(
-      "📩 Salesforce Response:",
-      text
-    );
-
-    // Return REAL Salesforce response
-    return res
-      .status(response.status)
-      .send(text);
-
-  } catch (error) {
-
-    console.error(
-      "❌ Backend Error:",
-      error
-    );
-
-    return res.status(500).json({
-
-      success: false,
-
-      error: error.message
-    });
-  }
-});
-
-// =====================================================
-// START SERVER
-// =====================================================
-app.listen(PORT, () => {
-
-  console.log(
-    `🌐 Server running on port ${PORT}`
+  res.send(
+    "🚀 Bluesky Bot + Salesforce Running"
   );
 });
 
-// =====================================================
-// START BOT
-// =====================================================
+/*
+=========================================================
+START SERVER
+=========================================================
+*/
+app.listen(PORT, () => {
+
+  console.log("==================================");
+  console.log(
+    `🌐 Server running on port ${PORT}`
+  );
+  console.log("==================================");
+
+});
+
+/*
+=========================================================
+START BOT
+=========================================================
+*/
 runBot();

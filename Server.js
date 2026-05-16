@@ -10,18 +10,23 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 
-// Uncomment if using Node below v18
-// const fetch = require("node-fetch");
-
-const app = express();
+// Required for Node versions below 18
+const fetch = (...args) =>
+  import("node-fetch").then(
+    ({ default: fetch }) => fetch(...args)
+  );
 
 /*
 =========================================================
-MIDDLEWARE
+APP SETUP
 =========================================================
 */
+const app = express();
+
 app.use(cors());
 app.use(express.json());
+
+const PORT = process.env.PORT || 3000;
 
 /*
 =========================================================
@@ -30,30 +35,19 @@ HEALTH CHECK
 */
 app.get("/", (req, res) => {
 
-  res.send("Backend Live 🚀");
+  res.send("🚀 Backend Live");
 
 });
 
 /*
 =========================================================
-CREATE LEAD ENDPOINT
+GET SALESFORCE ACCESS TOKEN
 =========================================================
 */
-app.post("/lead", async (req, res) => {
+async function getSalesforceToken() {
 
   try {
 
-    console.log("==================================");
-    console.log("📨 Incoming Lead");
-    console.log("==================================");
-
-    console.log(req.body);
-
-    /*
-    =====================================================
-    STEP 1: GET SALESFORCE ACCESS TOKEN
-    =====================================================
-    */
     const authResponse = await fetch(
 
       "https://test.salesforce.com/services/oauth2/token",
@@ -87,39 +81,55 @@ app.post("/lead", async (req, res) => {
 
     const authData =
       await authResponse.json();
-console.log("OAuth Status:", authResponse.status);
-console.log("OAuth Data:", authData);
+
     console.log("==================================");
-    console.log("🔐 OAuth Response");
+    console.log("🔐 OAUTH RESPONSE");
     console.log("==================================");
 
+    console.log("Status:", authResponse.status);
     console.log(authData);
 
     /*
     =====================================================
-    CHECK TOKEN
+    TOKEN VALIDATION
     =====================================================
     */
     if (!authData.access_token) {
 
-      return res.status(401).json({
-
-        success: false,
-
-        error: "Salesforce Authentication Failed",
-
-        details: authData
-      });
+      throw new Error(
+        "Salesforce authentication failed"
+      );
     }
 
-    /*
-    =====================================================
-    STEP 2: SEND DATA TO SALESFORCE
-    =====================================================
-    */
+    return authData;
+
+  } catch (error) {
+
+    console.error(
+      "❌ OAuth Error:",
+      error.message
+    );
+
+    throw error;
+  }
+}
+
+/*
+=========================================================
+FORWARD DATA TO SALESFORCE
+=========================================================
+*/
+async function forwardToSalesforce(
+  accessToken,
+  instanceUrl,
+  payload
+) {
+
+  try {
+
     const sfResponse = await fetch(
 
-      `${authData.instance_url}/services/apexrest/bluesky/webhook`,
+      `${instanceUrl}/services/apexrest/bluesky/webhook`,
 
       {
         method: "POST",
@@ -130,27 +140,79 @@ console.log("OAuth Data:", authData);
             "application/json",
 
           "Authorization":
-            `Bearer ${authData.access_token}`
+            `Bearer ${accessToken}`
         },
 
-        body: JSON.stringify(req.body)
+        body: JSON.stringify(payload)
       }
     );
 
-    /*
-    =====================================================
-    READ SALESFORCE RESPONSE
-    =====================================================
-    */
     const responseText =
       await sfResponse.text();
 
     console.log("==================================");
-    console.log("📩 Salesforce Response");
+    console.log("📩 SALESFORCE RESPONSE");
     console.log("==================================");
 
     console.log("Status:", sfResponse.status);
     console.log("Body:", responseText);
+
+    return {
+
+      status: sfResponse.status,
+
+      body: responseText
+    };
+
+  } catch (error) {
+
+    console.error(
+      "❌ Salesforce Forward Error:",
+      error.message
+    );
+
+    throw error;
+  }
+}
+
+/*
+=========================================================
+CREATE LEAD ENDPOINT
+POST /lead
+=========================================================
+*/
+app.post("/lead", async (req, res) => {
+
+  try {
+
+    console.log("==================================");
+    console.log("📨 INCOMING LEAD");
+    console.log("==================================");
+
+    console.log(req.body);
+
+    /*
+    =====================================================
+    STEP 1: AUTHENTICATE
+    =====================================================
+    */
+    const authData =
+      await getSalesforceToken();
+
+    /*
+    =====================================================
+    STEP 2: FORWARD TO SALESFORCE
+    =====================================================
+    */
+    const result =
+      await forwardToSalesforce(
+
+        authData.access_token,
+
+        authData.instance_url,
+
+        req.body
+      );
 
     /*
     =====================================================
@@ -158,16 +220,11 @@ console.log("OAuth Data:", authData);
     =====================================================
     */
     return res
-      .status(sfResponse.status)
-      .send(responseText);
+      .status(result.status)
+      .send(result.body);
 
   } catch (error) {
 
-    /*
-    =====================================================
-    ERROR HANDLING
-    =====================================================
-    */
     console.log("==================================");
     console.log("❌ BACKEND ERROR");
     console.log("==================================");
@@ -188,12 +245,12 @@ console.log("OAuth Data:", authData);
 START SERVER
 =========================================================
 */
-const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
 
   console.log("==================================");
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(
+    `🚀 Server running on port ${PORT}`
+  );
   console.log("==================================");
 
 });
