@@ -2,7 +2,8 @@ require('dotenv').config();
 
 const express = require("express");
 const cors = require("cors");
-const fetch = require("node-fetch");
+const fetch = (...args) =>
+  import('node-fetch').then(({default: fetch}) => fetch(...args));
 const { BskyAgent, RichText } = require('@atproto/api');
 
 const app = express();
