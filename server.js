@@ -29,7 +29,7 @@ SALESFORCE CONFIG
 =========================================================
 */
 const SF_LOGIN_URL =
-  "https://test.salesforce.com/services/oauth2/token";
+  "https://login.salesforce.com/services/oauth2/token";
 
 const SF_REST_ENDPOINT =
   "/services/apexrest/bluesky/webhook";
