@@ -60,7 +60,15 @@ async function getSalesforceToken() {
   console.log("==================================");
 
   try {
+console.log("USERNAME:", process.env.SF_USERNAME);
 
+console.log(
+  "PASSWORD LENGTH:",
+  (
+    process.env.SF_PASSWORD +
+    process.env.SF_TOKEN
+  ).length
+);
     const authResponse = await fetch(
 
       SF_LOGIN_URL,
