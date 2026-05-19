@@ -1,4 +1,4 @@
-/*
+/* 
 =========================================================
 BLUESKY → SALESFORCE BACKEND
 server.js
@@ -59,16 +59,36 @@ async function getSalesforceToken() {
   console.log("🔐 AUTHENTICATING WITH SALESFORCE");
   console.log("==================================");
 
-  try {
-console.log("USERNAME:", process.env.SF_USERNAME);
+  /*
+  =======================================================
+  DEBUG LOGS
+  =======================================================
+  */
+  console.log(
+    "USERNAME:",
+    process.env.SF_USERNAME
+  );
 
-console.log(
-  "PASSWORD LENGTH:",
-  (
-    process.env.SF_PASSWORD +
-    process.env.SF_TOKEN
-  ).length
-);
+  console.log(
+    "CLIENT ID:",
+    process.env.SF_CLIENT_ID
+  );
+
+  console.log(
+    "LOGIN URL:",
+    SF_LOGIN_URL
+  );
+
+  console.log(
+    "PASSWORD LENGTH:",
+    (
+      process.env.SF_PASSWORD +
+      process.env.SF_TOKEN
+    ).length
+  );
+
+  try {
+
     const authResponse = await fetch(
 
       SF_LOGIN_URL,
@@ -83,21 +103,21 @@ console.log(
 
         body: new URLSearchParams({
 
-  grant_type: "password",
+          grant_type: "password",
 
-  client_id:
-    process.env.SF_CLIENT_ID,
+          client_id:
+            process.env.SF_CLIENT_ID,
 
-  client_secret:
-    process.env.SF_CLIENT_SECRET,
+          client_secret:
+            process.env.SF_CLIENT_SECRET,
 
-  username:
-    process.env.SF_USERNAME,
+          username:
+            process.env.SF_USERNAME,
 
-  password:
-    process.env.SF_PASSWORD +
-    process.env.SF_TOKEN
-})
+          password:
+            process.env.SF_PASSWORD +
+            process.env.SF_TOKEN
+        })
       }
     );
 
